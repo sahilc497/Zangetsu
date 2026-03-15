@@ -1,10 +1,10 @@
 langchain
-Langchain-core
+langchain-core
 langchain-community
-Langgraph
+langgraph
 langchain-openai
 langchain-google-genai
-Langchain-groq
+langchain-groq
 langchain-mistralai
 python-dotenv
 faiss-cpu
@@ -13,5 +13,7 @@ fastapi
 uvicorn
 requests
 transformers
-torch torchvision torchaudio
+torch
+torchvision
+torchaudio
 sentence-transformers
