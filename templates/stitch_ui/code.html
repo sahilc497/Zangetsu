@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ZANGETSU // AI COMMAND INTERFACE</title>
+<!-- Fonts: Orbitron for tactical headers, Rajdhani for data, Silkscreen for pixel headers -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&amp;family=Rajdhani:wght@300;500;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'carbon': '#0a0a0c',
+            'neon-cyan': '#00f3ff',
+            'caution-orange': '#ff8c00',
+            'valorant-red': '#ff4655',
+            'glass-bg': 'rgba(15, 15, 20, 0.7)',
+          },
+          fontFamily: {
+            tactical: ['Rajdhani', 'sans-serif'],
+            header: ['Orbitron', 'sans-serif'],
+            pixel: ['Silkscreen', 'cursive'],
+          },
+          animation: {
+            'glitch': 'glitch 1s infinite linear alternate-reverse',
+            'scanline': 'scanline 10s linear infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            glitch: {
+              '0%': { transform: 'translate(0)' },
+              '20%': { transform: 'translate(-2px, 1px)' },
+              '40%': { transform: 'translate(-2px, -1px)' },
+              '60%': { transform: 'translate(2px, 1px)' },
+              '80%': { transform: 'translate(2px, -1px)' },
+              '100%': { transform: 'translate(0)' },
+            },
+            scanline: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(100%)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-effects">
+    body {
+      background-color: #050505;
+      background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%);
+      overflow: hidden;
+    }
+
+    /* Ambient Smoke/Noise Background */
+    .bg-noise {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+      opacity: 0.05;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .scanline-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(to bottom, transparent 50%, rgba(0, 243, 255, 0.02) 50%);
+      background-size: 100% 4px;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Tactical Borders */
+    .tactical-border {
+      position: relative;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
+    }
+
+    .tactical-border::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 10px; height: 10px;
+      border-top: 2px solid #00f3ff;
+      border-left: 2px solid #00f3ff;
+    }
+
+    .tactical-border::after {
+      content: '';
+      position: absolute;
+      bottom: 0; right: 0; width: 10px; height: 10px;
+      border-bottom: 2px solid #ff8c00;
+      border-right: 2px solid #ff8c00;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    ::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 2px; }
+
+    /* Minecraft Pixel Icon Simulation */
+    .pixel-icon {
+      image-rendering: pixelated;
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Visualizer Animation */
+    .viz-bar {
+      animation: barGrow 1.2s ease-in-out infinite;
+    }
+    @keyframes barGrow {
+      0%, 100% { height: 4px; }
+      50% { height: 24px; }
+    }
+  </style>
+</head>
+<body class="text-slate-300 font-tactical uppercase tracking-wider h-screen flex flex-col overflow-hidden">
+<div class="bg-noise"></div>
+<div class="scanline-overlay"></div>
+<!-- BEGIN: TopNavigation -->
+<header class="relative z-10 flex items-center justify-between px-6 py-4 bg-black/60 border-b border-neon-cyan/20 backdrop-blur-md">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-neon-cyan/10 flex items-center justify-center tactical-border group cursor-pointer">
+<span class="font-pixel text-neon-cyan text-xl group-hover:animate-glitch">Z</span>
+</div>
+<div>
+<h1 class="font-pixel text-xl text-white">ZANGETSU <span class="text-neon-cyan text-xs">v4.0.2</span></h1>
+<p class="text-[10px] text-neon-cyan/60 font-tactical">SYSTEM STATUS: <span class="text-green-400">OPTIMIZED</span></p>
+</div>
+</div>
+<!-- XP Bar for Conversation Progress -->
+<div class="hidden md:flex flex-col w-1/3 gap-1">
+<div class="flex justify-between text-[10px]">
+<span>CONVERSATION LEVEL: 24</span>
+<span class="text-caution-orange">XP: 2,450 / 3,000</span>
+</div>
+<div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-neon-cyan shadow-[0_0_10px_rgba(0,243,255,0.5)]" style="width: 75%;"></div>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right hidden sm:block">
+<div class="text-xs text-slate-500">OPERATOR</div>
+<div class="text-sm font-header text-white tracking-widest">GHOST_USER_01</div>
+</div>
+<div class="w-10 h-10 rounded-sm bg-gradient-to-br from-neon-cyan to-caution-orange p-[1px]">
+<img alt="User Profile" class="w-full h-full object-cover grayscale contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp16gF_VoPinXvY-6Dnp7MlRoCkN03AqB8LGNe5BB7ceQrmsH6O_Oc6Yu1aWNGjBQseCyaUx0cMOnl1wscoho_-LiYjfXCBUEgj39jUkjRiNsa2Ab92wsazzjBzBrNxdLuHibTiAynNiSrQBE1OecwW7uazgMU34KzoAte5ESF6u98IchqaNkmmZnjQYUiM-qRJuxiIaXsLsEAJTZK9z2j2tHCPuJoA1_6VmJa2qxioxVti8XmqPnk7zJVbC6iJ8cGT-_CIi9UBkl7"/>
+</div>
+</div>
+</header>
+<!-- END: TopNavigation -->
+<!-- BEGIN: MainInterface -->
+<main class="relative z-10 flex-1 flex flex-row overflow-hidden p-4 gap-4">
+<!-- Left Sidebar: Loadout/Personality -->
+<aside class="w-72 flex flex-col gap-4 hidden lg:flex">
+<!-- Personality Loadout Section -->
+<section class="flex-1 bg-glass-bg border border-white/5 p-4 rounded-sm flex flex-col gap-4">
+<h3 class="font-pixel text-xs text-caution-orange border-b border-caution-orange/30 pb-2 flex items-center gap-2">
+<img alt="Sword Icon" class="pixel-icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADoPT21gNWhslUgGkBU8pvS0kY4Wc_ge1GRu7WxFb_dokasC03Ts873CMr9QJKRzdbzxzc8GXCumxupn-ZIgCOlOsez3LNIr7sa2_oGdfMP5k8Kg-mJdjhC8_XuzmQHKlUJzvOHfm_uO3uDqKLaZfyc7uqXJojcGaEqGsxvPFNdSFrQvRgU6ILkepp1kpclBJ-oUOKv4JYWnIgpACoCKIxXDp5J_RmCeVnxWR5dD5BqNJCbfRpUAg26-JPL9ZgDKH0xK-6i3PhEQ6s"/>
+          AI LOADOUT
+        </h3>
+<div class="space-y-3 overflow-y-auto pr-2">
+<!-- Loadout Item: Tactical -->
+<div class="p-3 bg-white/5 border-l-2 border-neon-cyan hover:bg-neon-cyan/10 transition-colors cursor-pointer group" data-purpose="personality-card">
+<div class="flex justify-between items-start mb-1">
+<span class="text-xs font-header">STRIKER</span>
+<span class="text-[8px] bg-neon-cyan text-black px-1">ACTIVE</span>
+</div>
+<p class="text-[10px] leading-tight text-slate-400">Tactical, concise, and objective-oriented processing.</p>
+<button class="mt-2 w-full py-1 text-[10px] border border-neon-cyan/30 bg-neon-cyan/5 group-hover:bg-neon-cyan group-hover:text-black transition-all">EQUIP</button>
+</div>
+<!-- Loadout Item: Zen -->
+<div class="p-3 bg-white/5 border-l-2 border-slate-600 hover:border-caution-orange hover:bg-caution-orange/10 transition-colors cursor-pointer group" data-purpose="personality-card">
+<div class="flex justify-between items-start mb-1">
+<span class="text-xs font-header text-slate-400 group-hover:text-white">SHOGUN</span>
+<span class="text-[8px] bg-slate-800 text-slate-400 px-1">LOCKED</span>
+</div>
+<p class="text-[10px] leading-tight text-slate-500">Philosophical and expansive creative reasoning.</p>
+<button class="mt-2 w-full py-1 text-[10px] border border-slate-700 bg-slate-900/50 text-slate-600 cursor-not-allowed">LVL 30 REQ</button>
+</div>
+<!-- Loadout Item: Glitch -->
+<div class="p-3 bg-white/5 border-l-2 border-slate-600 hover:border-valorant-red hover:bg-valorant-red/10 transition-colors cursor-pointer group" data-purpose="personality-card">
+<div class="flex justify-between items-start mb-1">
+<span class="text-xs font-header text-slate-400 group-hover:text-white">VANDAL</span>
+</div>
+<p class="text-[10px] leading-tight text-slate-500">High-risk, unconventional logic paths.</p>
+<button class="mt-2 w-full py-1 text-[10px] border border-white/10 hover:border-valorant-red/50 hover:bg-valorant-red transition-all group-hover:text-white">EQUIP</button>
+</div>
+</div>
+</section>
+<!-- Mini-Map / Location Display -->
+<section class="h-48 bg-glass-bg border border-white/5 p-4 rounded-sm relative overflow-hidden group" data-purpose="minimap">
+<div class="absolute inset-0 bg-[url('https://placehold.co/300x200/222/555?text=GRID')] opacity-30 group-hover:scale-110 transition-transform duration-1000"></div>
+<div class="relative z-10 flex flex-col justify-between h-full">
+<div class="text-[10px] text-neon-cyan bg-black/80 px-1 w-fit">LOCAL_GRID: 42.88.01</div>
+<div class="self-center">
+<div class="w-4 h-4 rounded-full bg-neon-cyan animate-ping opacity-75"></div>
+</div>
+<div class="text-[8px] text-slate-500">SECTOR: NEURAL_CORE_07</div>
+</div>
+</section>
+</aside>
+<!-- Center: Chat Terminal -->
+<section class="flex-1 flex flex-col bg-glass-bg/40 backdrop-blur-sm border-x border-white/5 relative">
+<!-- Chat Header Info -->
+<div class="p-3 flex justify-between items-center bg-black/40 border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="flex gap-1" data-purpose="sound-visualizer">
+<div class="w-1 bg-neon-cyan viz-bar" style="animation-delay: 0.1s;"></div>
+<div class="w-1 bg-neon-cyan viz-bar" style="animation-delay: 0.3s;"></div>
+<div class="w-1 bg-neon-cyan viz-bar" style="animation-delay: 0.2s;"></div>
+<div class="w-1 bg-neon-cyan viz-bar" style="animation-delay: 0.4s;"></div>
+</div>
+<span class="text-xs text-neon-cyan font-header">SECURE CHANNEL // 0X-F22</span>
+</div>
+<div class="text-[10px] text-slate-500">LATENCY: 12ms</div>
+</div>
+<!-- Messages Area -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6" id="chat-terminal">
+<!-- AI Message -->
+<div class="flex flex-col gap-2 max-w-2xl">
+<div class="flex items-center gap-2">
+<span class="font-pixel text-[10px] text-neon-cyan">ZANGETSU</span>
+<span class="text-[8px] text-slate-600">14:02:44</span>
+</div>
+<div class="tactical-border bg-neon-cyan/5 p-4 text-sm leading-relaxed text-slate-200">
+             Systems online. Kernel modules loaded. I am ready to process your request, Operator. What are our objectives for today?
+          </div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col gap-2 max-w-2xl ml-auto items-end">
+<div class="flex items-center gap-2">
+<span class="text-[8px] text-slate-600">14:03:10</span>
+<span class="font-pixel text-[10px] text-caution-orange">GHOST_USER</span>
+</div>
+<div class="tactical-border bg-caution-orange/5 p-4 text-sm leading-relaxed text-slate-200 border-caution-orange/20">
+             Initiate sector scan. I need a summary of the current neural network density in the creative sub-nodes.
+          </div>
+</div>
+<!-- AI Message Loading -->
+<div class="flex flex-col gap-2 max-w-2xl">
+<div class="flex items-center gap-2">
+<span class="font-pixel text-[10px] text-neon-cyan">ZANGETSU</span>
+</div>
+<div class="text-sm italic text-neon-cyan/50 animate-pulse">
+            ANALYZING DATA STREAMS... [||||||||||  ] 84%
+          </div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-6 bg-black/60 border-t border-white/5">
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-neon-cyan/20 to-caution-orange/20 rounded blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+<div class="relative flex items-end gap-2 bg-carbon border border-white/10 p-1">
+<div class="p-3 bg-white/5 flex items-center justify-center border-r border-white/10">
+<img alt="Crafting Icon" class="pixel-icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATEpWARY_XBcjE1Rh9xZFISuh_UKPGfWY_k5Hnq9C0YvIxGQbJtxLglpBzg4EFxh493mHe3396PSGBMD_YMgyoFlDxg9xM6_YpgN46iXoUAYq1c1EtXpyhpXg1DbHNaL1djVZZa2ADC8q8bRVmob-RRusdK6BCr6W1jJ6s2L59-IJ298JS9ewUHiNDgFlYinyvYxod9GdFbHvjFgHehSBWhkwu1czYeCsK1mHe7NSCJUO8oY6ik8xabNCYp7bK_gDVXnOiStZ8HzZ-"/>
+</div>
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-sm py-3 px-2 placeholder-slate-600 resize-none h-12" placeholder="ENTER COMMAND OR QUERY..."></textarea>
+<button class="p-3 bg-neon-cyan text-black hover:bg-white transition-colors">
+<svg class="h-5 w-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" fill-rule="evenodd"></path>
+</svg>
+</button>
+</div>
+<div class="flex justify-between mt-2 px-1">
+<span class="text-[8px] text-slate-600 tracking-[0.2em]">CRAFTING INPUT_CORE_V2</span>
+<span class="text-[8px] text-neon-cyan/50">SHIFT + ENTER TO BROADCAST</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Sidebar: Stats & Info -->
+<aside class="w-64 flex flex-col gap-4 hidden xl:flex">
+<!-- Session Stats -->
+<section class="bg-glass-bg border border-white/5 p-4 rounded-sm" data-purpose="stats">
+<h3 class="font-pixel text-[10px] text-neon-cyan mb-4">SESSION STATS</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-slate-500">QUERIES</span>
+<span class="text-xs text-white">1,402</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-slate-500">TOKENS_GEN</span>
+<span class="text-xs text-white">45.2K</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-slate-500">UPTIME</span>
+<span class="text-xs text-white">04:12:09</span>
+</div>
+<div class="pt-4 border-t border-white/5">
+<div class="text-[8px] text-caution-orange mb-1">ACCURACY RATING</div>
+<div class="flex gap-1">
+<div class="h-1 w-full bg-caution-orange/20"><div class="h-full bg-caution-orange" style="width: 98%;"></div></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Connection Status Overlay Feel -->
+<section class="flex-1 bg-glass-bg border border-white/5 p-4 rounded-sm flex flex-col overflow-hidden" data-purpose="system-logs">
+<h3 class="font-pixel text-[10px] text-slate-500 mb-2">SYSTEM_LOGS</h3>
+<div class="text-[9px] font-mono space-y-1 text-slate-500 opacity-60">
+<p class="text-green-500/50">[OK] DB_CONN_STABLE</p>
+<p>[INF] CACHE_PURGE_SUCCESS</p>
+<p>[WRN] LATENCY_SPIKE_DETECTED</p>
+<p>[INF] NEURAL_MESH_SYNC_01</p>
+<p>[OK] ENCRYPTION_ROTATED</p>
+<p>[INF] HANDSHAKE_COMPLETE</p>
+<p class="text-neon-cyan/50">[OK] AI_HEARTBEAT_READY</p>
+<p>[INF] LOGGING_SESSION_START</p>
+</div>
+<div class="mt-auto pt-4">
+<div class="relative w-full h-24 bg-black/40 border border-white/5 overflow-hidden">
+<!-- Animated Canvas-like Grid -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-full h-px bg-neon-cyan/10 animate-pulse"></div>
+</div>
+<canvas class="absolute inset-0 w-full h-full opacity-50" id="wave-visualizer"></canvas>
+</div>
+<button class="w-full mt-2 py-2 text-[10px] bg-valorant-red/10 border border-valorant-red/30 text-valorant-red hover:bg-valorant-red hover:text-white transition-all">
+            TERMINATE SESSION
+          </button>
+</div>
+</section>
+</aside>
+</main>
+<!-- END: MainInterface -->
+<!-- BEGIN: FooterStatus -->
+<footer class="relative z-10 px-4 py-1 bg-black/80 border-t border-white/5 flex justify-between items-center text-[9px] text-slate-600">
+<div class="flex gap-4">
+<span>ZANGETSU_OS // BUILD_774.2</span>
+<span class="text-neon-cyan/40">SERVER: US-EAST-1</span>
+</div>
+<div class="flex gap-4">
+<span class="animate-pulse flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+        NODE_STATUS: STABLE
+      </span>
+<span>CRC: 0X8842AF</span>
+</div>
+</footer>
+<!-- END: FooterStatus -->
+<!-- BEGIN: LogicScripts -->
+<script data-purpose="canvas-setup">
+    // Simple visualizer effect for the bottom right
+    const canvas = document.getElementById('wave-visualizer');
+    if(canvas) {
+      const ctx = canvas.getContext('2d');
+      let offset = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        
+        for(let i = 0; i < canvas.width; i++) {
+          const y = (canvas.height / 2) + Math.sin((i + offset) * 0.05) * 10;
+          if(i === 0) ctx.moveTo(i, y);
+          else ctx.lineTo(i, y);
+        }
+        
+        ctx.stroke();
+        offset += 2;
+        requestAnimationFrame(draw);
+      }
+      
+      // Handle resize
+      function resize() {
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+      draw();
+    }
+  </script>
+<script data-purpose="ui-interactions">
+    // Subtle audio hover effect logic placeholder
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        // Here you would trigger a tactical UI sound
+      });
+    });
+
+    // Auto-scroll chat to bottom
+    const chatTerminal = document.getElementById('chat-terminal');
+    if(chatTerminal) {
+      chatTerminal.scrollTop = chatTerminal.scrollHeight;
+    }
+  </script>
+<!-- END: LogicScripts -->
+</body></html>

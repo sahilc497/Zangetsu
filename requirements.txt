@@ -1,0 +1,17 @@
+langchain
+Langchain-core
+langchain-community
+Langgraph
+langchain-openai
+langchain-google-genai
+Langchain-groq
+langchain-mistralai
+python-dotenv
+faiss-cpu
+tiktoken
+fastapi
+uvicorn
+requests
+transformers
+torch torchvision torchaudio
+sentence-transformers
